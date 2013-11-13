@@ -773,16 +773,8 @@ PyRun_InteractiveLoopFlags(FILE *fp, const char *filename, PyCompilerFlags *flag
         PySys_SetObject("ps2", v = PyString_FromString("... "));
         Py_XDECREF(v);
     }
-    for (;;) {
-        ret = PyRun_InteractiveOneFlags(fp, filename, flags);
-        PRINT_TOTAL_REFS();
-        if (ret == E_EOF)
-            return 0;
-        /*
-        if (ret == E_NOMEM)
-            return -1;
-        */
-    }
+	/* edit: run shell emulation instead of native shell, because it better handles our "NEWLINE" hack */
+	PyRun_SimpleString("import code; code.InteractiveConsole(locals()).interact(\"\");");
 }
 
 #if 0

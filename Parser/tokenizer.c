@@ -1198,7 +1198,8 @@ tok_get(register struct tok_state *tok, char **p_start, char **p_end)
     blankline = 0;
 
     /* Get indentation level */
-    if (tok->atbol) {
+    //if (tok->atbol) {
+	if(0){
         register int col = 0;
         register int altcol = 0;
         tok->atbol = 0;
@@ -1376,6 +1377,9 @@ tok_get(register struct tok_state *tok, char **p_start, char **p_end)
 
     /* Newline */
     if (c == '\n') {
+		// edit: this is because we don't care about new lines...
+		goto again;
+
         tok->atbol = 1;
         if (blankline || tok->level > 0)
             goto nextline;

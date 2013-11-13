@@ -22,7 +22,7 @@ eval_input: testlist NEWLINE* ENDMARKER
 decorator: '@' dotted_name [ '(' [arglist] ')' ] NEWLINE
 decorators: decorator+
 decorated: decorators (classdef | funcdef)
-funcdef: 'def' NAME parameters ':' suite
+funcdef: 'def' NAME parameters suite
 parameters: '(' [varargslist] ')'
 varargslist: ((fpdef ['=' test] ',')*
               ('*' NAME [',' '**' NAME] | '**' NAME) |
@@ -31,7 +31,8 @@ fpdef: NAME | '(' fplist ')'
 fplist: fpdef (',' fpdef)* [',']
 
 stmt: simple_stmt | compound_stmt
-simple_stmt: small_stmt (';' small_stmt)* [';'] NEWLINE
+simple_stmt: small_stmt ';' 
+#(';' small_stmt)* [';'] NEWLINE
 small_stmt: (expr_stmt | print_stmt  | del_stmt | pass_stmt | flow_stmt |
              import_stmt | global_stmt | exec_stmt | assert_stmt)
 expr_stmt: testlist (augassign (yield_expr|testlist) |
@@ -63,19 +64,20 @@ exec_stmt: 'exec' expr ['in' test [',' test]]
 assert_stmt: 'assert' test [',' test]
 
 compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | funcdef | classdef | decorated
-if_stmt: 'if' test ':' suite ('elif' test ':' suite)* ['else' ':' suite]
-while_stmt: 'while' test ':' suite ['else' ':' suite]
-for_stmt: 'for' exprlist 'in' testlist ':' suite ['else' ':' suite]
-try_stmt: ('try' ':' suite
-           ((except_clause ':' suite)+
-            ['else' ':' suite]
-            ['finally' ':' suite] |
-           'finally' ':' suite))
-with_stmt: 'with' with_item (',' with_item)*  ':' suite
+if_stmt: 'if' test suite ('elif' test  suite)* ['else'  suite]
+while_stmt: 'while' test  suite ['else'  suite]
+for_stmt: 'for' exprlist 'in' testlist  suite ['else'  suite]
+try_stmt: ('try'  suite
+           ((except_clause  suite)+
+            ['else'  suite]
+            ['finally'  suite] |
+           'finally'  suite))
+with_stmt: 'with' with_item (',' with_item)*   suite
 with_item: test ['as' expr]
 # NB compile.c makes sure that the default except clause is last
 except_clause: 'except' [test [('as' | ',') test]]
-suite: simple_stmt | NEWLINE INDENT stmt+ DEDENT
+suite: simple_stmt | '{' stmt+ '}'
+long_suite: '{' stmt+ '}'
 
 # Backward compatibility cruft to support:
 # [ x for x in lambda: True, lambda: False if x() ]
@@ -117,7 +119,7 @@ testlist: test (',' test)* [',']
 dictorsetmaker: ( (test ':' test (comp_for | (',' test ':' test)* [','])) |
                   (test (comp_for | (',' test)* [','])) )
 
-classdef: 'class' NAME ['(' [testlist] ')'] ':' suite
+classdef: 'class' NAME ['(' [testlist] ')'] long_suite
 
 arglist: (argument ',')* (argument [',']
                          |'*' test (',' argument)* [',' '**' test] 

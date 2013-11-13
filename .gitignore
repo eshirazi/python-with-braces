@@ -1,0 +1,17 @@
+*.pyc
+*.pdb
+*.user
+*.exp
+PCbuild/*.lib
+PCbuild/*.pyd
+PCbuild/*.exe
+*.ncb
+*.obj
+PCbuild/Win32-temp-Debug/*
+PCbuild/Win32-temp-Release/*
+PCbuild/*.dll
+PCbuild/*.o
+PCbuild/pcbuild.suo
+PCbuild/python.bsc
+PC/pythonnt_rc_d.h
+PC/python_nt_d.h
