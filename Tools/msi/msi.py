@@ -22,11 +22,12 @@ srcdir = os.path.abspath("../..")
 # Text to be displayed as the version in dialogs etc.
 # goes into file name and ProductCode. Defaults to
 # current_version.day for Snapshot, current_version otherwise
-full_current_version = None
+full_current_version = "2.7"
 # Is Tcl available at all?
 have_tcl = True
 # path to PCbuild directory
 PCBUILD="PCbuild"
+ORGPython = "ORGPython"
 # msvcrt version
 MSVCR = "90"
 # Name of certificate in default store to sign MSI with
@@ -179,7 +180,7 @@ have_mingw = build_mingw_lib(lib_file, def_file, dll_file, mingw_lib)
 # Determine the target architecture
 if os.system("nmake /nologo /c /f msisupport.mak") != 0:
     raise RuntimeError("'nmake /f msisupport.mak' failed")
-dll_path = os.path.join(srcdir, PCBUILD, dll_file)
+dll_path = os.path.join(srcdir, ORGPython, dll_file)
 msilib.set_arch_from_file(dll_path)
 if msilib.pe_type(dll_path) != msilib.pe_type("msisupport.dll"):
     raise SystemError, "msisupport.dll for incorrect architecture"
@@ -225,9 +226,9 @@ def build_database():
     # schema represents the installer 2.0 database schema.
     # sequence is the set of standard sequences
     # (ui/execute, admin/advt/install)
-    msiname = "python-%s%s.msi" % (full_current_version, msilib.arch_ext)
+    msiname = "python_with_braces-%s%s.msi" % (full_current_version, msilib.arch_ext)
     db = msilib.init_database(msiname,
-                  schema, ProductName="Python "+full_current_version+productsuffix,
+                  schema, ProductName="Python With Braces "+full_current_version+productsuffix,
                   ProductCode=product_code,
                   ProductVersion=current_version,
                   Manufacturer=u"Python Software Foundation",
@@ -416,7 +417,7 @@ def add_ui(db):
         # See "Custom Action Type 51",
         # "Custom Action Execution Scheduling Options"
         ("InitialTargetDir", 307, "TARGETDIR",
-         "[WindowsVolume]Python%s%s" % (major, minor)),
+         "[WindowsVolume]PythonWithBraces%s%s" % (major, minor)),
         ("SetDLLDirToTarget", 307, "DLLDIR", "[TARGETDIR]"),
         ("SetDLLDirToSystem32", 307, "DLLDIR", SystemFolderName),
         # msidbCustomActionTypeExe + msidbCustomActionTypeSourceFile
@@ -451,14 +452,14 @@ def add_ui(db):
              ("SetDLLDirToSystem32", 'DLLDIR="" and ' + sys32cond, 751),
              ("SetDLLDirToTarget", 'DLLDIR="" and not ' + sys32cond, 752),
              ("UpdateEditIDLE", None, 1050),
-             ("CompilePyc", "COMPILEALL", 6800),
+             ("CompilePyc", None, 6800),
              ("CompilePyo", "COMPILEALL", 6801),
              ("CompileGrammar", "COMPILEALL", 6802),
             ])
     add_data(db, "AdminExecuteSequence",
             [("InitialTargetDir", 'TARGETDIR=""', 750),
              ("SetDLLDirToTarget", 'DLLDIR=""', 751),
-             ("CompilePyc", "COMPILEALL", 6800),
+             ("CompilePyc", None, 6800),
              ("CompilePyo", "COMPILEALL", 6801),
              ("CompileGrammar", "COMPILEALL", 6802),
             ])
@@ -918,15 +919,17 @@ def add_files(db):
     generate_license()
     root.add_file("LICENSE.txt", src=os.path.abspath("LICENSE.txt"))
     root.start_component("python.exe", keyfile="python.exe")
-    root.add_file("%s/python.exe" % PCBUILD)
+    root.add_file("%s/python.exe" % ORGPython)
+    root.add_file("%s/pythonb.exe" % PCBUILD)
     root.start_component("pythonw.exe", keyfile="pythonw.exe")
-    root.add_file("%s/pythonw.exe" % PCBUILD)
+    root.add_file("%s/pythonw.exe" % ORGPython)
+    root.add_file("%s/pythonbw.exe" % PCBUILD)
 
     # msidbComponentAttributesSharedDllRefCount = 8, see "Component Table"
     dlldir = PyDirectory(db, cab, root, srcdir, "DLLDIR", ".")
 
     pydll = "python%s%s.dll" % (major, minor)
-    pydllsrc = os.path.join(srcdir, PCBUILD, pydll)
+    pydllsrc = os.path.join(srcdir, ORGPython, pydll)
     dlldir.start_component("DLLDIR", flags = 8, keyfile = pydll, uuid = pythondll_uuid)
     installer = msilib.MakeInstaller()
     pyversion = installer.FileVersion(pydllsrc, 0)
@@ -934,9 +937,12 @@ def add_files(db):
         # For releases, the Python DLL has the same version as the
         # installer package.
         assert pyversion.split(".")[:3] == current_version.split(".")
-    dlldir.add_file("%s/python%s%s.dll" % (PCBUILD, major, minor),
+    dlldir.add_file("%s/python%s%s.dll" % (ORGPython, major, minor),
                     version=pyversion,
                     language=installer.FileVersion(pydllsrc, 1))
+    dlldir.add_file("%s/pythonb%s%s.dll" % (PCBUILD, major, minor),
+                    version=pyversion,
+                    language=installer.FileVersion(pydllsrc, 1))    
     DLLs = PyDirectory(db, cab, root, srcdir + "/" + PCBUILD, "DLLs", "DLLS|DLLs")
 
     # msvcr90.dll: Need to place the DLL and the manifest into the root directory,
@@ -1209,6 +1215,8 @@ def add_registry(db):
             [# Extensions
              ("py.ext", -1, r"Software\Classes\."+ext, "",
               "Python.File", "REGISTRY.def"),
+             ("pyb.ext", -1, r"Software\Classes\."+ext+'b', "",
+              "Python.BFile", "REGISTRY.def"),             
              ("pyw.ext", -1, r"Software\Classes\."+ext+'w', "",
               "Python.NoConFile", "REGISTRY.def"),
              ("pyc.ext", -1, r"Software\Classes\."+ext+'c', "",
@@ -1218,11 +1226,15 @@ def add_registry(db):
              # MIME types
              ("py.mime", -1, r"Software\Classes\."+ext, "Content Type",
               "text/plain", "REGISTRY.def"),
+             ("pyb.mime", -1, r"Software\Classes\."+ext+'b', "Content Type",
+              "text/plain", "REGISTRY.def"),             
              ("pyw.mime", -1, r"Software\Classes\."+ext+'w', "Content Type",
               "text/plain", "REGISTRY.def"),
              #Verbs
              ("py.open", -1, pat % (testprefix, "", "open"), "",
               r'"[TARGETDIR]python.exe" "%1" %*', "REGISTRY.def"),
+             ("pyb.open", -1, pat % (testprefix, "B", "open"), "",
+              r'"[TARGETDIR]pythonb.exe" "%1" %*', "REGISTRY.def"),             
              ("pyw.open", -1, pat % (testprefix, "NoCon", "open"), "",
               r'"[TARGETDIR]pythonw.exe" "%1" %*', "REGISTRY.def"),
              ("pyc.open", -1, pat % (testprefix, "Compiled", "open"), "",
@@ -1231,6 +1243,8 @@ def add_registry(db):
              #Icons
              ("py.icon", -1, pat2 % (testprefix, ""), "",
               r'[DLLs]py.ico', "REGISTRY.def"),
+             ("pyb.icon", -1, pat2 % (testprefix, "B"), "",
+              r'[DLLs]py.ico', "REGISTRY.def"),             
              ("pyw.icon", -1, pat2 % (testprefix, "NoCon"), "",
               r'[DLLs]py.ico', "REGISTRY.def"),
              ("pyc.icon", -1, pat2 % (testprefix, "Compiled"), "",
@@ -1238,6 +1252,8 @@ def add_registry(db):
              # Descriptions
              ("py.txt", -1, pat3 % (testprefix, ""), "",
               "Python File", "REGISTRY.def"),
+             ("pyb.txt", -1, pat3 % (testprefix, "B"), "",
+              "Python With Braces File", "REGISTRY.def"),             
              ("pyw.txt", -1, pat3 % (testprefix, "NoCon"), "",
               "Python File (no console)", "REGISTRY.def"),
              ("pyc.txt", -1, pat3 % (testprefix, "Compiled"), "",
@@ -1245,6 +1261,8 @@ def add_registry(db):
              # Drop Handler
              ("py.drop", -1, pat4 % (testprefix, ""), "",
               "{60254CA5-953B-11CF-8C96-00AA00B8708C}", "REGISTRY.def"),
+             ("pyb.drop", -1, pat4 % (testprefix, "B"), "",
+              "{60254CA5-953B-11CF-8C96-00AA00B8708C}", "REGISTRY.def"),             
              ("pyw.drop", -1, pat4 % (testprefix, "NoCon"), "",
               "{60254CA5-953B-11CF-8C96-00AA00B8708C}", "REGISTRY.def"),
              ("pyc.drop", -1, pat4 % (testprefix, "Compiled"), "",
@@ -1262,8 +1280,10 @@ def add_registry(db):
               ("Documentation", -1, prefix+r"\Help\Main Python Documentation", "",
                "[TARGETDIR]Doc\\"+docfile , "REGISTRY.doc"),
               ("Modules", -1, prefix+r"\Modules", "+", None, "REGISTRY"),
-              ("AppPaths", -1, r"Software\Microsoft\Windows\CurrentVersion\App Paths\Python.exe",
+              ("AppPaths1", -1, r"Software\Microsoft\Windows\CurrentVersion\App Paths\Python.exe",
                "", r"[TARGETDIR]Python.exe", "REGISTRY.def"),
+              ("AppPaths2", -1, r"Software\Microsoft\Windows\CurrentVersion\App Paths\Pythonb.exe",
+               "", r"[TARGETDIR]Pythonb.exe", "REGISTRY.def"),              
               ("DisplayIcon", -1,
                r"Software\Microsoft\Windows\CurrentVersion\Uninstall\%s" % product_code,
                "DisplayIcon", "[TARGETDIR]python.exe", "REGISTRY")
