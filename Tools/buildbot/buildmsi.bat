@@ -1,6 +1,6 @@
 @rem Used by the buildbot "buildmsi" step.
 
-cmd /c Tools\buildbot\external.bat
+rem cmd /c Tools\buildbot\external.bat
 @rem build release versions of things
 call "%VS90COMNTOOLS%vsvars32.bat"
 

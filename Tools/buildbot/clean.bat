@@ -1,7 +1,7 @@
 @rem Used by the buildbot "clean" step.
 call "%VS90COMNTOOLS%vsvars32.bat"
 @echo Deleting .pyc/.pyo files ...
-del /s Lib\*.pyc Lib\*.pyo
+rem del /s Lib\*.pyc Lib\*.pyo
 @echo Deleting test leftovers ...
 rmdir /s /q build
 cd PCbuild

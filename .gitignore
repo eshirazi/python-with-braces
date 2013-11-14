@@ -15,3 +15,12 @@ PCbuild/pcbuild.suo
 PCbuild/python.bsc
 PC/pythonnt_rc_d.h
 PC/python_nt_d.h
+*.msi
+Tools/msi/*.zip
+Tools/msi/*.lib
+Tools/msi/*.dll
+Tools/msi/merge.log
+PC/pythonnt_rc.h
+PC/python_nt.h
+PC/*.exe
+PC/py.res
