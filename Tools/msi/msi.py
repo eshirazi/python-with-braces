@@ -920,6 +920,7 @@ def add_files(db):
     root.add_file("LICENSE.txt", src=os.path.abspath("LICENSE.txt"))
     root.start_component("python.exe", keyfile="python.exe")
     root.add_file("%s/python.exe" % ORGPython)
+    root.start_component("pythonb.exe", keyfile="pythonb.exe")
     root.add_file("%s/pythonb.exe" % PCBUILD)
     root.start_component("pythonw.exe", keyfile="pythonw.exe")
     root.add_file("%s/pythonw.exe" % ORGPython)
@@ -1291,21 +1292,21 @@ def add_registry(db):
     # Shortcuts, see "Shortcut Table"
     add_data(db, "Directory",
              [("ProgramMenuFolder", "TARGETDIR", "."),
-              ("MenuDir", "ProgramMenuFolder", "PY%s%s|%sPython %s.%s" % (major,minor,testprefix,major,minor))])
+              ("MenuDir", "ProgramMenuFolder", "PY%s%s|%sPython with Braces %s.%s" % (major,minor,testprefix,major,minor))])
     add_data(db, "RemoveFile",
              [("MenuDir", "TARGETDIR", None, "MenuDir", 2)])
     tcltkshortcuts = []
-    if have_tcl:
-        tcltkshortcuts = [
-              ("IDLE", "MenuDir", "IDLE|IDLE (Python GUI)", "pythonw.exe",
-               tcltk.id, r'"[TARGETDIR]Lib\idlelib\idle.pyw"', None, None, "python_icon.exe", 0, None, "TARGETDIR"),
-              ("PyDoc", "MenuDir", "MODDOCS|Module Docs", "pythonw.exe",
-               tcltk.id, r'"[TARGETDIR]Tools\scripts\pydocgui.pyw"', None, None, "python_icon.exe", 0, None, "TARGETDIR"),
-              ]
+    #if have_tcl:
+    #    tcltkshortcuts = [
+    #          ("IDLE", "MenuDir", "IDLE|IDLE (Python GUI)", "pythonw.exe",
+    #           tcltk.id, r'"[TARGETDIR]Lib\idlelib\idle.pyw"', None, None, "python_icon.exe", 0, None, "TARGETDIR"),
+    #          ("PyDoc", "MenuDir", "MODDOCS|Module Docs", "pythonw.exe",
+    #           tcltk.id, r'"[TARGETDIR]Tools\scripts\pydocgui.pyw"', None, None, "python_icon.exe", 0, None, "TARGETDIR"),
+    #          ]
     add_data(db, "Shortcut",
              tcltkshortcuts +
              [# Advertised shortcuts: targets are features, not files
-              ("Python", "MenuDir", "PYTHON|Python (command line)", "python.exe",
+              ("Python", "MenuDir", "PYTHON|Python with Braces(command line)", "pythonb.exe",
                default_feature.id, None, None, None, "python_icon.exe", 2, None, "TARGETDIR"),
               # Advertising the Manual breaks on (some?) Win98, and the shortcut lacks an
               # icon first.

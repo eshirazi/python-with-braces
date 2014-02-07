@@ -41,7 +41,7 @@ future_check_features(PyFutureFeatures *ff, stmt_ty s, const char *filename)
             ff->ff_features |= CO_FUTURE_UNICODE_LITERALS;
         } else if (strcmp(feature, "braces") == 0) {
             PyErr_SetString(PyExc_SyntaxError,
-                            "not a chance");
+                            "hell yeah!!!");
             PyErr_SyntaxLocation(filename, s->lineno);
             return 0;
         } else {

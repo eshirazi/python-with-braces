@@ -17,4 +17,4 @@ nmake /f icons.mak
 cd ..\Tools\msi
 del *.msi
 nmake /f msisupport.mak
-%HOST_PYTHON% msi.py
+msi.py
